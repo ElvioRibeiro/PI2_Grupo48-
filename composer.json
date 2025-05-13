@@ -1,0 +1,27 @@
+{
+    "name": "doapet/poc",
+    "description": "Prova de Conceito - DoaPet: conectar doadores de animais a adotantes.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cline - AI Full-Stack Developer",
+            "email": "ai@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Src\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

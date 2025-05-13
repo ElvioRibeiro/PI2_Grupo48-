@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  web:
+    image: php:8.2-apache
+    container_name: doapet_web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./public/uploads:/var/www/html/public/uploads
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+      # Pass environment variables from .env file to PHP
+      # Note: PHP's getenv() will need these to be explicitly passed or loaded by a library
+      # For simplicity in a pure PHP setup without extra libs for .env loading in PHP itself,
+      # we can rely on Docker to pass them if needed, or use a .htaccess for SetEnv.
+      # However, Database.php is written to use getenv(), assuming .env is loaded.
+      # Docker Compose `env_file` or `environment` can set these for the container.
+      # Let's assume .env is read by PHP or variables are set in Apache config if needed.
+      # For this PoC, we'll rely on Database.php using getenv() and assume .env is handled.
+      # A common way is to have an entrypoint script that exports .env vars or use phpdotenv.
+      # For Apache, you can use `PassEnv` in vhost or .htaccess if mod_env is enabled.
+      # Simplest for Docker:
+      DB_HOST: ${DB_HOST:-db}
+      DB_NAME: ${DB_NAME:-doapet}
+      DB_USER: ${DB_USER:-root}
+      DB_PASS: ${DB_PASS:-secret}
+    depends_on:
+      - db
+    networks:
+      - doapet_network
+
+  db:
+    image: mysql:8.0
+    container_name: doapet_db
+    ports:
+      - "3306:3306" # Expose MySQL port if needed for external tools, not strictly necessary for app
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-doapet}
+      MYSQL_USER: ${DB_USER:-root} # This creates a user with this name
+      MYSQL_PASSWORD: ${DB_PASS:-secret} # Password for the MYSQL_USER
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-secret} # Password for the root user
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql # Load schema on init
+    networks:
+      - doapet_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: doapet_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-secret} # For phpMyAdmin to connect as root
+    depends_on:
+      - db
+    networks:
+      - doapet_network
+
+volumes:
