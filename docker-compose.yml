@@ -62,3 +62,4 @@ services:
       - doapet_network
 
 volumes:
+  db_data: {}
